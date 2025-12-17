@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Chart.js + w2ui Cards</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- w2ui CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/w2ui@2.0.0/w2ui-2.0.css">
+  <script src="https://unpkg.com/w2ui@2.0.0/w2ui-2.0.js"></script>
+
+  <style>
+    body {
+      margin: 20px;
+      font-family: Arial, sans-serif;
+      background: #f5f6f8;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .score {
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .indicator {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: white;
+    }
+
+    .good { background: #2ecc71; }
+    .fair { background: #f1c40f; }
+    .bad  { background: #e74c3c; }
+
+    .chart-container {
+      height: 200px;
+      margin-top: 10px;
+    }
+
+    .grid-container {
+      margin-top: 15px;
+      height: 200px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">CPU Health</div>
+        <div class="indicator good">GOOD</div>
+      </div>
+      <div class="score">92</div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="chart1"></canvas>
+    </div>
+
+    <div class="grid-container" id="grid1"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Memory Usage</div>
+        <div class="indicator fair">FAIR</div>
+      </div>
+      <div class="score">68</div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="chart2"></canvas>
+    </div>
+
+    <div class="grid-container" id="grid2"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Disk Errors</div>
+        <div class="indicator bad">BAD</div>
+      </div>
+      <div class="score">41</div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="chart3"></canvas>
+    </div>
+
+    <div class="grid-container" id="grid3"></div>
+  </div>
+</div>
+
+<script>
+  // ----- Charts -----
+  function createChart(id, data) {
+    new Chart(document.getElementById(id), {
+      type: 'line',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri'],
+        datasets: [{
+          data: data,
+          borderWidth: 2,
+          tension: 0.3,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  createChart('chart1', [70, 75, 80, 85, 92]);
+  createChart('chart2', [50, 55, 60, 65, 68]);
+  createChart('chart3', [20, 30, 35, 38, 41]);
+
+  // ----- Tables -----
+  function createGrid(id) {
+    new w2grid({
+      name: id,
+      box: '#' + id,
+      show: { footer: false },
+      columns: [
+        { field: 'metric', text: 'Metric', size: '60%' },
+        { field: 'value', text: 'Value', size: '40%' }
+      ],
+      records: [
+        { recid: 1, metric: 'Avg', value: Math.floor(Math.random() * 100) },
+        { recid: 2, metric: 'Min', value: Math.floor(Math.random() * 100) },
+        { recid: 3, metric: 'Max', value: Math.floor(Math.random() * 100) }
+      ]
+    });
+  }
+
+  createGrid('grid1');
+  createGrid('grid2');
+  createGrid('grid3');
+</script>
+
+</body>
+</html>
