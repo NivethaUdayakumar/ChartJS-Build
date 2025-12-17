@@ -24,3 +24,9 @@
   </script>
 </body>
 </html>
+
+
+//Update dynamic
+chart.data.datasets[0].data.push(40);
+chart.data.labels.push('May');
+chart.update();
