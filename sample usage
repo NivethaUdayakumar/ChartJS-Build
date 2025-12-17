@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chart.js example</title>
+</head>
+<body>
+  <canvas id="myChart" width="400" height="200"></canvas>
+
+  <script src="chart.umd.js"></script>
+  <script>
+    const ctx = document.getElementById('myChart');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr'],
+        datasets: [{
+          label: 'Revenue',
+          data: [10, 25, 18, 30],
+          borderWidth: 2
+        }]
+      }
+    });
+  </script>
+</body>
+</html>
