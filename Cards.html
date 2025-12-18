@@ -1,0 +1,836 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Flow Dashboard</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/w2ui@2.0.0/w2ui-2.0.min.css">
+<script src="https://cdn.jsdelivr.net/npm/w2ui@2.0.0/w2ui-2.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+/* ============================
+   Global
+   ============================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f6f7fb;
+  color: #111827;
+}
+
+.page {
+  padding: 16px;
+}
+
+/* ============================
+   Level 1 cards layout
+   ============================ */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+/* ============================
+   Card base styles
+   ============================ */
+
+.card,
+.block-card,
+.stage-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+
+  /* scrolling behavior */
+  max-height: 520px;              /* controls per-card height */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================
+   Headings
+   ============================ */
+
+h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Sticky headers inside scrollable cards */
+.block-card h3,
+.stage-card h3 {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 2;
+  padding-bottom: 6px;
+}
+
+/* ============================
+   Key / value rows (L1)
+   ============================ */
+
+.kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.k {
+  font-size: 12px;
+  color: #555;
+}
+
+.v {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ============================
+   Buttons
+   ============================ */
+
+.btn {
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #2b66f6;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.btn.ghost {
+  background: #e9edf7;
+  color: #1e2433;
+}
+
+.btnrow {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.linkbtn {
+  background: #111827;
+}
+
+/* ============================
+   Popup layout
+   ============================ */
+
+.popup-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-title {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.content {
+  padding: 12px;
+  overflow: hidden;     /* cards scroll, not popup */
+}
+
+/* ============================
+   Grid inside popup (L2 / L3)
+   ============================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 12px;
+}
+
+/* ============================
+   Form fields
+   ============================ */
+
+.field {
+  margin: 8px 0;
+}
+
+/* Sticky dropdowns (optional, good UX) */
+.stage-card .field {
+  position: sticky;
+  top: 28px;
+  background: #ffffff;
+  z-index: 1;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+/* ============================
+   Charts
+   ============================ */
+
+.chartbox {
+  height: 220px;
+  min-height: 220px;
+  position: relative;
+}
+
+.chartbox canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Stack multiple charts inside cards */
+.chartwrap {
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+
+.charttitle {
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* ============================
+   Legends
+   ============================ */
+
+.legend {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.legend div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* ============================
+   Badges
+   ============================ */
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ============================
+   Scrollbar styling (optional)
+   ============================ */
+
+.card::-webkit-scrollbar,
+.block-card::-webkit-scrollbar,
+.stage-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card::-webkit-scrollbar-thumb,
+.block-card::-webkit-scrollbar-thumb,
+.stage-card::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.card::-webkit-scrollbar-track,
+.block-card::-webkit-scrollbar-track,
+.stage-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+  <div class="cards" id="lvl1"></div>
+</div>
+
+<script>
+/* =========================================================
+   FALLBACK JSON
+   ========================================================= */
+const FALLBACK_DATA = {
+  "APR_BLOCK0_RUN1": {
+    "ID": "APR1",
+    "Milestone": "M1",
+    "Release": "R1",
+    "PLACE_WNS": ["all:-0.253", "r2r:-0.311", "fm:-0.132", "tm:-0.145", "lcg:-0.156"],
+    "PLACE_TNS": ["all:-10.3", "r2r:-11.1", "fm:-4.2", "tm:-5.4", "lcg:-6.1"],
+    "CLOCK_WNS": ["all:-0.210", "r2r:-0.280", "fm:-0.110", "tm:-0.120"],
+    "CLOCK_TNS": ["all:-9.2", "r2r:-10.8", "fm:-3.8", "tm:-4.5"],
+    "ROUTE_WNS": ["all:-0.190", "r2r:-0.260", "fm:-0.090", "tm:-0.105", "lcg:-0.140"],
+    "ROUTE_TNS": ["all:-8.7", "r2r:-9.9", "fm:-3.1", "tm:-3.9", "lcg:-5.5"],
+    "PLACE_Speed": 2.3,
+    "CLOCK_Speed": 2.4,
+    "ROUTE_Speed": 2.5,
+    "Incomplete": 3,
+    "Pending": 4,
+    "Complete": 5,
+    "URL1": "schedule.html",
+    "URL2": "apr.csv",
+    "Timestamp": "2025-01-10T10:00:00Z"
+  },
+  "APR_BLOCK0_RUN2": {
+    "ID": "APR2",
+    "Milestone": "M1",
+    "Release": "R1",
+    "PLACE_WNS": ["all:-0.180", "r2r:-0.210", "fm:-0.095", "tm:-0.110"],
+    "PLACE_TNS": ["all:-7.1", "r2r:-8.2", "fm:-2.9", "tm:-3.5"],
+    "CLOCK_WNS": ["all:-0.160", "r2r:-0.190", "fm:-0.080", "tm:-0.090"],
+    "CLOCK_TNS": ["all:-6.8", "r2r:-7.6", "fm:-2.5", "tm:-3.0"],
+    "ROUTE_WNS": ["all:-0.140", "r2r:-0.170", "fm:-0.070", "tm:-0.080"],
+    "ROUTE_TNS": ["all:-6.0", "r2r:-6.9", "fm:-2.1", "tm:-2.6"],
+    "PLACE_Speed": 2.7,
+    "CLOCK_Speed": 2.6,
+    "ROUTE_Speed": 2.55,
+    "Incomplete": 1,
+    "Pending": 2,
+    "Complete": 8,
+    "URL1": "schedule.html",
+    "URL2": "apr.csv",
+    "Timestamp": "2025-01-11T10:00:00Z"
+  },
+  "APR_BLOCK1_RUN1": {
+    "ID": "APR3",
+    "Milestone": "M2",
+    "Release": "R1",
+    "PLACE_WNS": ["all:-0.300", "r2r:-0.350", "tm:-0.180", "lcg:-0.240"],
+    "PLACE_TNS": ["all:-12.1", "r2r:-13.4", "tm:-6.8", "lcg:-9.1"],
+    "CLOCK_WNS": ["all:-0.250", "r2r:-0.310", "tm:-0.150"],
+    "CLOCK_TNS": ["all:-10.9", "r2r:-11.6", "tm:-5.1"],
+    "ROUTE_WNS": ["all:-0.220", "r2r:-0.280", "tm:-0.120", "lcg:-0.190"],
+    "ROUTE_TNS": ["all:-9.8", "r2r:-10.7", "tm:-4.4", "lcg:-7.2"],
+    "PLACE_Speed": 2.1,
+    "CLOCK_Speed": 2.2,
+    "ROUTE_Speed": 2.3,
+    "Incomplete": 4,
+    "Pending": 3,
+    "Complete": 2,
+    "URL1": "schedule.html",
+    "URL2": "apr.csv",
+    "Timestamp": "2025-01-03T10:00:00Z"
+  },
+  "PI_BLOCK1_RUN1": {
+    "ID": "PI9",
+    "Milestone": "M3",
+    "Release": "R2",
+    "PLACE_Speed": 1.9,
+    "CLOCK_Speed": 2.0,
+    "ROUTE_Speed": 2.1,
+    "Incomplete": 2,
+    "Pending": 1,
+    "Complete": 9,
+    "URL1": "schedule.html",
+    "URL2": "pi.csv",
+    "Timestamp": "2025-01-12T07:00:00Z"
+  }
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let DATA = [];
+let POPUP_STATE = { level: 2, flow: null, block: null };
+let POPUP_DOM = { content: null };
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function parseTS(t){ const x = Date.parse(t); return Number.isFinite(x) ? x : 0; }
+function newest(arr){ return arr.reduce((a,b)=>!a||b.ts>a.ts?b:a, null); }
+function groupBy(arr, keyFn){
+  const m = {};
+  for (const x of arr) (m[keyFn(x)] ||= []).push(x);
+  return m;
+}
+function normalize(raw){
+  const out = [];
+  for (const [key, obj] of Object.entries(raw || {})) {
+    const p = String(key).split('_');
+    if (p.length < 3) continue;
+    const flow  = p[0];
+    const block = p[1];
+    const run   = p.slice(2).join('_');
+    const ts = parseTS(obj.Timestamp);
+    if (!flow || !block || !run || !ts) continue;
+    out.push({ key, flow, block, run, ts, obj });
+  }
+  return out;
+}
+function safeNum(x){
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+}
+function openIframe(url, title){
+  w2popup.open({
+    title: title || 'Details',
+    width: 1200,
+    height: 800,
+    body: `<iframe src="${url}" style="width:100%;height:100%;border:0"></iframe>`
+  });
+}
+function bindEnumChanges(field, inputEl, fn){
+  // w2field change hook (if available)
+  try { field.on('change', fn); } catch (e) {}
+
+  // also bind native events because tag remove sometimes updates after w2 event
+  const fire = () => setTimeout(fn, 0);
+  inputEl.addEventListener('change', fire);
+  inputEl.addEventListener('input', fire);
+  inputEl.addEventListener('blur', fire);
+
+  // also observe the tag container inside w2ui field
+  // w2ui renders tags under the input's parent
+  const host = inputEl.parentElement;
+  if (host) {
+    const mo = new MutationObserver(fire);
+    mo.observe(host, { childList:true, subtree:true });
+  }
+}
+
+/* =========================================================
+   LOAD DATA
+   ========================================================= */
+fetch('data.json', { cache:'no-store' })
+  .then(r => { if (!r.ok) throw new Error('fetch'); return r.json(); })
+  .then(j => DATA = normalize(j))
+  .catch(() => DATA = normalize(FALLBACK_DATA))
+  .finally(renderL1);
+
+/* =========================================================
+   LEVEL 1
+   ========================================================= */
+function renderL1(){
+  const root = document.getElementById('lvl1');
+  root.innerHTML = '';
+
+  const flows = groupBy(DATA, r => r.flow);
+
+  for (const flow of Object.keys(flows).sort()) {
+    if (flow === 'APR') root.appendChild(renderAprCard(flows[flow]));
+    else if (flow === 'PI') root.appendChild(renderPiCard(flows[flow]));
+  }
+}
+
+function renderAprCard(recs){
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const newestRec = newest(recs);
+  const complete = Number(newestRec?.obj?.Complete || 0);
+  const pending  = Number(newestRec?.obj?.Pending  || 0);
+  const incomplete = Number(newestRec?.obj?.Incomplete || 0);
+
+  const score = (complete + pending) ? (complete / (complete + pending)) * 20 : 0;
+
+  const byBlock = groupBy(recs, r => r.block);
+  const newestPerBlock = Object.values(byBlock).map(arr => newest(arr)).filter(Boolean);
+  const now = Date.now();
+  const blocksUpdated7d = newestPerBlock.filter(r => (now - r.ts) <= 7 * 24 * 3600 * 1000).length;
+
+  card.innerHTML = `
+    <h3>Flow: APR</h3>
+    <div class="kv">
+      <div class="k">Score</div><div class="v">${score.toFixed(1)}/20</div>
+      <div class="k">Blocks updated in 7 days</div><div class="v">${blocksUpdated7d}</div>
+      <div class="k">Incomplete</div><div class="v"><span class="badge" id="apr_inc">${incomplete}</span></div>
+      <div class="k">Pending</div><div class="v"><span class="badge" id="apr_pen">${pending}</span></div>
+      <div class="k">Complete</div><div class="v"><span class="badge" id="apr_com">${complete}</span></div>
+      <div class="k">Last Updated</div><div class="v">${newestRec.obj.Timestamp}</div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" id="apr_open_l2">Open Level 2</button>
+      <button class="btn linkbtn" id="apr_open_url1">Open URL1</button>
+    </div>
+  `;
+
+  const url1 = newestRec?.obj?.URL1;
+  card.querySelector('#apr_open_l2').onclick = () => openPopup('APR');
+  card.querySelector('#apr_open_url1').onclick = () => { if (url1) openIframe(url1, 'APR URL1'); };
+
+  card.querySelector('#apr_inc').style.cursor = 'pointer';
+  card.querySelector('#apr_pen').style.cursor = 'pointer';
+  card.querySelector('#apr_com').style.cursor = 'pointer';
+
+  card.querySelector('#apr_inc').onclick = () => { if (url1) openIframe(url1, 'APR Incomplete'); };
+  card.querySelector('#apr_pen').onclick = () => { if (url1) openIframe(url1, 'APR Pending'); };
+  card.querySelector('#apr_com').onclick = () => { if (url1) openIframe(url1, 'APR Complete'); };
+
+  return card;
+}
+
+function renderPiCard(recs){
+  const card = document.createElement('div');
+  card.className = 'card';
+  const n = newest(recs);
+
+  const rows = Object.entries(n.obj)
+    .map(([k,v]) => `<div class="k">${k}</div><div class="v">${Array.isArray(v)?v.join(', '):v}</div>`)
+    .join('');
+
+  card.innerHTML = `
+    <h3>Flow: PI</h3>
+    <div class="kv">${rows}</div>
+    <div class="btnrow">
+      <button class="btn" id="pi_open_l2">Open Level 2</button>
+    </div>
+  `;
+  card.querySelector('#pi_open_l2').onclick = () => openPopup('PI');
+  return card;
+}
+
+/* =========================================================
+   POPUP
+   ========================================================= */
+function openPopup(flow){
+  POPUP_STATE = { level: 2, flow, block: null };
+
+  w2popup.open({
+    title: `Flow ${flow}`,
+    width: 1500,
+    height: 900,
+    body: `
+      <div class="popup-body">
+        <div class="header">
+          <button class="btn ghost" id="nav_btn"></button>
+          <div class="header-title" id="nav_title"></div>
+          <div style="width:110px"></div>
+        </div>
+        <div class="content" id="popup_content"></div>
+      </div>
+    `,
+    onOpen(evt){
+      evt.onComplete = () => {
+        POPUP_DOM.content = document.getElementById('popup_content');
+        renderPopupView();
+      };
+    }
+  });
+}
+
+function renderPopupView(){
+  const btn = document.getElementById('nav_btn');
+  const title = document.getElementById('nav_title');
+  const content = POPUP_DOM.content;
+
+  content.innerHTML = '';
+
+  if (POPUP_STATE.level === 2) {
+    btn.textContent = 'Close';
+    btn.onclick = () => w2popup.close();
+    title.textContent = `Level 2   Flow ${POPUP_STATE.flow}`;
+    renderL2(content);
+  } else {
+    btn.textContent = 'Back to Level 2';
+    btn.onclick = () => {
+      POPUP_STATE.level = 2;
+      POPUP_STATE.block = null;
+      renderPopupView();
+    };
+    title.textContent = `Level 3   Flow ${POPUP_STATE.flow}   Block ${POPUP_STATE.block}`;
+    renderL3(content);
+  }
+}
+
+/* =========================================================
+   L2: delete chart container and rerender on multiselect change
+   ========================================================= */
+function renderL2(container){
+  const recs = DATA.filter(r => r.flow === POPUP_STATE.flow);
+  const byBlock = groupBy(recs, r => r.block);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  container.appendChild(grid);
+
+  for (const block of Object.keys(byBlock).sort()) {
+    const blockRecs = byBlock[block].slice().sort((a,b) => a.ts - b.ts);
+    const runs = [...new Set(blockRecs.map(r => r.run))];
+
+    const card = document.createElement('div');
+    card.className = 'block-card';
+    card.innerHTML = `
+      <h3>Block: ${block}</h3>
+      <div class="field"><label>Runs</label><input></div>
+      <div class="chartbox"></div>
+      <div class="legend"></div>
+      <div class="btnrow">
+        <button class="btn">Go to Level 3</button>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    const runInput = card.querySelector('input');
+    const goBtn = card.querySelector('button');
+
+    const runField = new w2field({
+      el: runInput,
+      type: 'enum',
+      items: runs.map(r => ({ id: r, text: r })),
+      openOnFocus: true
+    });
+
+    const initRuns = blockRecs.slice(-5).map(r => ({ id:r.run, text:r.run }));
+    runField.set(initRuns);
+
+    let chart = null;
+
+    function destroyChart(){
+      if (chart) {
+        try { chart.destroy(); } catch (e) {}
+        chart = null;
+      }
+    }
+
+    function redraw(){
+      destroyChart();
+
+      // delete chart container and recreate it
+      const oldBox = card.querySelector('.chartbox');
+      const oldLegend = card.querySelector('.legend');
+
+      const newBox = document.createElement('div');
+      newBox.className = 'chartbox';
+
+      const newLegend = document.createElement('div');
+      newLegend.className = 'legend';
+
+      oldBox.replaceWith(newBox);
+      oldLegend.replaceWith(newLegend);
+
+      const selRuns = runField.get().map(x => x.id);
+
+      const points = [];
+      for (const run of selRuns) {
+        const n = newest(blockRecs.filter(r => r.run === run));
+        if (!n) continue;
+        points.push({
+          id: n.obj.ID,
+          p: safeNum(n.obj.PLACE_Speed),
+          c: safeNum(n.obj.CLOCK_Speed),
+          r: safeNum(n.obj.ROUTE_Speed),
+          desc: `${run}/${n.obj.Milestone}/${n.obj.Release}`
+        });
+      }
+
+      if (!points.length) return;
+
+      const canvas = document.createElement('canvas');
+      newBox.appendChild(canvas);
+
+      chart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: points.map(p => p.id),
+          datasets: [
+            { label: 'PLACE Speed', data: points.map(p => p.p) },
+            { label: 'CLOCK Speed', data: points.map(p => p.c) },
+            { label: 'ROUTE Speed', data: points.map(p => p.r) }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      newLegend.innerHTML = points
+        .map(p => `<div><b>${p.id}</b><span>${p.desc}</span></div>`)
+        .join('');
+    }
+
+    bindEnumChanges(runField, runInput, redraw);
+    redraw();
+
+    goBtn.onclick = () => {
+      POPUP_STATE.level = 3;
+      POPUP_STATE.block = block;
+      renderPopupView();
+    };
+  }
+}
+
+/* =========================================================
+   L3: delete charts container content and recreate charts per selected graphs
+   ========================================================= */
+function renderL3(container){
+  const recs = DATA.filter(r => r.flow === POPUP_STATE.flow && r.block === POPUP_STATE.block);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  container.appendChild(grid);
+
+  ['PLACE','CLOCK','ROUTE'].forEach(stage => buildL3Stage(grid, stage, recs));
+}
+
+function buildL3Stage(parent, stage, recs){
+  const stageCard = document.createElement('div');
+  stageCard.className = 'stage-card';
+  stageCard.innerHTML = `
+    <h3>${stage}</h3>
+    <div class="field"><label>Runs</label><input></div>
+    <div class="field"><label>Graphs</label><input></div>
+    <div class="charts"></div>
+  `;
+  parent.appendChild(stageCard);
+
+  const runs = [...new Set(recs.map(r => r.run))];
+
+  const keySet = new Set();
+  for (const r of recs) {
+    (r.obj[`${stage}_WNS`] || []).forEach(s => keySet.add(String(s).split(':')[0]));
+    (r.obj[`${stage}_TNS`] || []).forEach(s => keySet.add(String(s).split(':')[0]));
+  }
+  const keys = [...keySet];
+
+  const runInput = stageCard.querySelectorAll('input')[0];
+  const keyInput = stageCard.querySelectorAll('input')[1];
+  const chartsDiv = stageCard.querySelector('.charts');
+
+  const runField = new w2field({
+    el: runInput,
+    type: 'enum',
+    items: runs.map(r => ({ id: r, text: r })),
+    openOnFocus: true
+  });
+
+  const graphField = new w2field({
+    el: keyInput,
+    type: 'enum',
+    items: keys.map(k => ({ id: k, text: k })),
+    openOnFocus: true
+  });
+
+  runField.set(recs.slice().sort((a,b)=>a.ts-b.ts).slice(-5).map(r => ({ id:r.run, text:r.run })));
+  graphField.set(keys.slice(0,2).map(k => ({ id:k, text:k })));
+
+  let liveCharts = [];
+
+  function destroyAll(){
+    for (const c of liveCharts) {
+      try { c.destroy(); } catch (e) {}
+    }
+    liveCharts = [];
+  }
+
+  function extractValue(list, key){
+    const hit = (list || []).find(x => String(x).startsWith(key + ':'));
+    if (!hit) return null;
+    const parts = String(hit).split(':');
+    return safeNum(parts[1]);
+  }
+
+  function redraw(){
+    destroyAll();
+
+    // remove entire charts content, then rebuild
+    chartsDiv.innerHTML = '';
+
+    const selRuns = runField.get().map(x => x.id);
+    const selKeys = graphField.get().map(x => x.id);
+
+    if (!selRuns.length || !selKeys.length) return;
+
+    for (const k of selKeys) {
+      const wrap = document.createElement('div');
+      wrap.className = 'chartwrap';
+      wrap.innerHTML = `
+        <div class="charttitle">${stage} ${k}</div>
+        <div class="chartbox"></div>
+        <div class="legend"></div>
+      `;
+      chartsDiv.appendChild(wrap);
+
+      const box = wrap.querySelector('.chartbox');
+      const legend = wrap.querySelector('.legend');
+
+      const points = [];
+      for (const run of selRuns) {
+        const n = newest(recs.filter(r => r.run === run));
+        if (!n) continue;
+
+        const w = extractValue(n.obj[`${stage}_WNS`], k);
+        const t = extractValue(n.obj[`${stage}_TNS`], k);
+        if (w === null && t === null) continue;
+
+        points.push({
+          id: n.obj.ID,
+          wns: w,
+          tns: t,
+          desc: `${run}/${n.obj.Milestone}/${n.obj.Release}`
+        });
+      }
+
+      if (!points.length) continue;
+
+      const canvas = document.createElement('canvas');
+      box.appendChild(canvas);
+
+      const chart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: points.map(p => p.id),
+          datasets: [
+            { label: 'WNS', yAxisID: 'y1', data: points.map(p => p.wns) },
+            { label: 'TNS', yAxisID: 'y2', data: points.map(p => p.tns) }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y1: { position: 'left' },
+            y2: { position: 'right', grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+
+      liveCharts.push(chart);
+
+      legend.innerHTML = points
+        .map(p => `<div><b>${p.id}</b><span>${p.desc}</span></div>`)
+        .join('');
+    }
+  }
+
+  bindEnumChanges(runField, runInput, redraw);
+  bindEnumChanges(graphField, keyInput, redraw);
+  redraw();
+}
+</script>
+</body>
+</html>
